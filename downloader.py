@@ -64,6 +64,7 @@ class Downloader:
             if args.download_path is not None
             else DEFAULT_DOWNLOAD_PATH
         )
+        self.download_path.mkdir(parents=True, exist_ok=True)
         os.chdir(self.download_path)
 
     def download_item(self, current_task: int, file_info: tuple) -> None:
