@@ -13,6 +13,9 @@ URLS_FILE = "URLs.txt"                          # The name of the file containin
                                                 # list of URLs to process.
 SESSION_LOG = "session_log.txt"                 # The file used to log session errors.
 
+MAX_WORKERS = 3                                 # The maximum number of threads for
+                                                # concurrent downloads.
+
 # Constants for file sizes, expressed in bytes.
 KB = 1024
 MB = 1024 * KB

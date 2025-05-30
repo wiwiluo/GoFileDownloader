@@ -12,26 +12,31 @@ Usage:
         2. Process each URL for downloading anime content.
         3. Clear the contents of 'URLs.txt' after all URLs have been processed.
 """
+from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from downloader import handle_download_process, initialize_managers
+from downloader import handle_download_process, initialize_managers, parse_arguments
 from helpers.config import URLS_FILE
 from helpers.file_utils import read_file, write_file
 from helpers.general_utils import clear_terminal
 
+if TYPE_CHECKING:
+    from argparse import Namespace
+
 FILE_PATH = Path.cwd() / URLS_FILE
 
 
-def process_urls(urls: list[str]) -> None:
+def process_urls(urls: list[str], args: Namespace | None = None) -> None:
     """Validate and downloads items for a list of URLs."""
     live_manager = initialize_managers()
 
     try:
         with live_manager.live:
             for url in urls:
-                handle_download_process(url, live_manager)
+                handle_download_process(url, live_manager, args=args)
 
             live_manager.stop()
 
@@ -42,8 +47,9 @@ def process_urls(urls: list[str]) -> None:
 def main() -> None:
     """Run the script."""
     clear_terminal()
+    args = parse_arguments()
     urls = read_file(FILE_PATH)
-    process_urls(urls)
+    process_urls(urls, args)
     write_file(FILE_PATH)
 
 

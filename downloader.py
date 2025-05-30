@@ -12,13 +12,13 @@ import hashlib
 import logging
 import os
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
 
-from helpers.config import DOWNLOAD_FOLDER
+from helpers.config import DOWNLOAD_FOLDER, MAX_WORKERS
 from helpers.download_utils import save_file_with_progress
 from helpers.general_utils import clear_terminal, create_download_directory
 from helpers.gofile_utils import (
@@ -31,7 +31,7 @@ from helpers.managers.live_manager import LiveManager
 from helpers.managers.log_manager import LoggerTable
 from helpers.managers.progress_manager import ProgressManager
 
-CURRENT_DOWNLOAD_FOLDER = Path.cwd() / DOWNLOAD_FOLDER
+DEFAULT_DOWNLOAD_PATH = Path.cwd() / DOWNLOAD_FOLDER
 
 SCRIPT_NAME = Path(__file__).name
 DEFAULT_USAGE = f"python3 {SCRIPT_NAME} <album_url>"
@@ -50,18 +50,21 @@ class Downloader:
         self,
         url: str,
         live_manager: LiveManager,
-        password: str | None = None,
-        max_workers: int = 3,
+        args: Namespace | None = None,
     ) -> None:
         """Initialize the downloader with the given parameters."""
         self.url = url
         self.live_manager = live_manager
-        self.password = password
-        self.max_workers = max_workers
+        self.password = args.password
+        self.max_workers = MAX_WORKERS
         self.token = get_account_token()
 
-        CURRENT_DOWNLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-        os.chdir(CURRENT_DOWNLOAD_FOLDER)
+        self.download_path = (
+            Path(args.download_path)
+            if args.download_path is not None
+            else DEFAULT_DOWNLOAD_PATH
+        )
+        os.chdir(self.download_path)
 
     def download_item(self, current_task: int, file_info: tuple) -> None:
         """Download a single file."""
@@ -100,7 +103,7 @@ class Downloader:
             for current_task, item_info in enumerate(files_info):
                 executor.submit(self.download_item, current_task, item_info)
 
-        os.chdir(CURRENT_DOWNLOAD_FOLDER)
+        os.chdir(self.download_path)
 
     def _prepare_headers(
         self,
@@ -125,6 +128,7 @@ class Downloader:
         # If include_auth is True, add the Authorization header
         if include_auth:
             headers["Authorization"] = f"Bearer {self.token}"
+
         else:
             # Add Referer and Origin headers if URL is provided
             if url:
@@ -132,8 +136,7 @@ class Downloader:
                 headers["Referer"] = adjusted_url
                 headers["Origin"] = url
 
-            # Include the Cookie header for authentication when URL is not
-            # needed
+            # Include the Cookie header for authentication when URL is not needed
             headers["Cookie"] = f"accountToken={self.token}"
 
         return headers
@@ -201,7 +204,7 @@ class Downloader:
     def initialize_download(self) -> None:
         """Initialize the download process."""
         content_id = get_content_id(self.url)
-        content_directory = CURRENT_DOWNLOAD_FOLDER / content_id
+        content_directory = self.download_path / content_id
         create_download_directory(content_directory)
 
         files_info = []
@@ -212,8 +215,7 @@ class Downloader:
         )
         self.parse_links(content_id, files_info, hashed_password)
 
-        # Removes the root content directory if there's no file or
-        # subdirectory.
+        # Removes the root content directory if there's no file or subdirectory.
         if not os.listdir(content_directory) and not files_info:
             Path(content_directory).rmdir()
             return
@@ -228,7 +230,7 @@ class Downloader:
 def handle_download_process(
     url: str,
     live_manager: LiveManager,
-    password: str | None = None,
+    args: Namespace | None = None,
 ) -> None:
     """Handle the process of downloading content from a specified URL."""
     if url is None:
@@ -236,7 +238,7 @@ def handle_download_process(
         logging.error(usage)
         sys.exit(1)
 
-    downloader = Downloader(url=url, live_manager=live_manager, password=password)
+    downloader = Downloader(url=url, live_manager=live_manager, args=args)
     downloader.initialize_download()
 
 
@@ -247,7 +249,7 @@ def initialize_managers() -> LiveManager:
     return LiveManager(progress_manager, logger_table)
 
 
-def setup_parser() -> ArgumentParser:
+def parse_arguments() -> ArgumentParser:
     """Set up and returns an argument parser."""
     parser = argparse.ArgumentParser(
         description="Download content from a specified URL.",
@@ -259,23 +261,24 @@ def setup_parser() -> ArgumentParser:
         type=str,
         help="The password for the download.",
     )
-    return parser
+    parser.add_argument(
+        "--download-path",
+        "-d",
+        type=str,
+        help="The directory where the downloaded content will be saved.",
+    )
+    return parser.parse_args()
 
 
 def main() -> None:
-    """Process command-line arguments to download an album from a specified URL.
-
-    It expects at least one argument (the URL) and optionally a second argument
-    (a password).
-    """
+    """Process command-line arguments to download an album from a specified URL."""
     clear_terminal()
-    parser = setup_parser()
-    args = parser.parse_args()
+    args = parse_arguments()
     live_manager = initialize_managers()
 
     try:
         with live_manager.live:
-            handle_download_process(args.url, live_manager, password=args.password)
+            handle_download_process(args.url, live_manager, args=args)
             live_manager.stop()
 
     except KeyboardInterrupt:

@@ -4,10 +4,6 @@ The `LoggerTable` class maintains a circular buffer of events and renders them
 in a table format with scrolling rows. It allows you to log events with
 timestamps and view them in a styled table. The table supports customization of
 the number of rows to display and the style of the borders and headers.
-
-This module can be integrated into a live display using the `rich.live.Live`
-and `rich.console.Group` to combine the logger table with other content,
-like progress indicators.
 """
 
 from collections import deque
