@@ -123,13 +123,13 @@ python3 main.py
 
 To download content to a custom path, use the `--download_path` argument, followed by the absolute path of the desired download folder.
 
-```
+```bash
 python3 main.py <gofile_url> --download_path /path/to/custom_folder
 ```
 
 Alternatively, you can use the `downloader.py` script in the same way:
 
-```
+```bash
 python3 downloader.py <gofile_url> --download_path /path/to/custom_folder
 ```
 
