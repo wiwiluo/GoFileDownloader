@@ -118,3 +118,23 @@ python3 main.py
 ```
 
 3. The downloaded files will be saved in the `Downloads` directory.
+
+### Custom Download Path
+
+To download content to a custom path, use the `--download_path` argument, followed by the absolute path of the desired download folder.
+
+```
+python3 main.py <gofile_url> --download_path /path/to/custom_folder
+```
+
+Alternatively, you can use the `downloader.py` script in the same way:
+
+```
+python3 downloader.py <gofile_url> --download_path /path/to/custom_folder
+```
+
+The default behavior is to save files in a `Downloads` folder, created within the current working directory, if no path is specified.
+
+## Logging
+
+The application logs any issues encountered during the download process in a file named `session_log.txt`. Check this file for any URLs that may have been blocked or had errors.
