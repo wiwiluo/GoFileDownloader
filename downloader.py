@@ -12,13 +12,19 @@ import hashlib
 import logging
 import os
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
 
-from helpers.config import DOWNLOAD_FOLDER, MAX_WORKERS
+from helpers.config import (
+    BASE_HEADERS,
+    DEFAULT_USAGE,
+    DOWNLOAD_FOLDER,
+    MAX_WORKERS,
+    PASSWORD_USAGE,
+)
 from helpers.download_utils import save_file_with_progress
 from helpers.general_utils import clear_terminal, create_download_directory
 from helpers.gofile_utils import (
@@ -32,10 +38,6 @@ from helpers.managers.log_manager import LoggerTable
 from helpers.managers.progress_manager import ProgressManager
 
 DEFAULT_DOWNLOAD_PATH = Path.cwd() / DOWNLOAD_FOLDER
-
-SCRIPT_NAME = Path(__file__).name
-DEFAULT_USAGE = f"python3 {SCRIPT_NAME} <album_url>"
-PASSWORD_USAGE = f"python3 {SCRIPT_NAME} <album_url> <password>"
 
 
 class Downloader:
@@ -114,17 +116,7 @@ class Downloader:
     ) -> dict:
         """Prepare the HTTP headers for the request."""
         # Base headers common for all requests
-        headers = {
-            "Accept-Encoding": "gzip, deflate, br",
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "*/*",
-            "Connection": "keep-alive",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-site",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
-        }
+        headers = BASE_HEADERS
 
         # If include_auth is True, add the Authorization header
         if include_auth:
@@ -160,10 +152,11 @@ class Downloader:
             )
 
         def check_password(data: dict) -> bool:
-            return "password" in data and data.get("passwordStatus") != "passwordOk"
+            password_exists = "password" in data
+            password_status_ok = data.get("passwordStatus") == "passwordOk"
+            return password_exists and not password_status_ok
 
         content_url = generate_content_url(identifier, password=password)
-
         headers = self._prepare_headers(include_auth=True)
         response = requests.get(content_url, headers=headers, timeout=10).json()
 
@@ -179,7 +172,8 @@ class Downloader:
         if check_password(data):
             self.live_manager.update_log(
                 "Missing password",
-                "Provide the password for the URL.",
+                "The URL requires a valid password. "
+                "Please provide one to proceed.",
             )
             return
 
@@ -216,7 +210,7 @@ class Downloader:
         )
         self.parse_links(content_id, files_info, hashed_password)
 
-        # Removes the root content directory if there's no file or subdirectory.
+        # Remove the root content directory if there's no file or subdirectory.
         if not os.listdir(content_directory) and not files_info:
             Path(content_directory).rmdir()
             return
@@ -250,7 +244,7 @@ def initialize_managers() -> LiveManager:
     return LiveManager(progress_manager, logger_table)
 
 
-def parse_arguments() -> ArgumentParser:
+def parse_arguments() -> Namespace:
     """Set up and returns an argument parser."""
     parser = argparse.ArgumentParser(
         description="Download content from a specified URL.",

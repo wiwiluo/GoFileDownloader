@@ -14,12 +14,12 @@ from .config import GOFILE_API, GOFILE_API_ACCOUNTS, HTTP_STATUS_OK
 def get_content_id(url: str) -> str | None:
     """Extract and returns the content ID from a GoFile URL."""
     try:
-        if url.split("/")[-2] != "d":
+        if url.rstrip("/").split("/")[-2] != "d":
             message = f"Missing ID for URL: {url}"
             logging.error(message)
             return None
 
-        return url.split("/")[-1]
+        return url.rstrip("/").split("/")[-1]
 
     except IndexError:
         message = f"{url} is not a valid GoFile URL."
@@ -45,12 +45,12 @@ def generate_content_url(content_id: str, password: str | None = None) -> None:
 
 def check_response_status(response: requests.Response, filename: str) -> bool:
     """Check if the server response is valid based on status codes."""
-    is_invalid_status_code = (
+    response_is_invalid = (
         response.status_code in (403, 404, 405, 500)
         or response.status_code != HTTP_STATUS_OK
     )
 
-    if is_invalid_status_code:
+    if response_is_invalid:
         message = (
              f"Invalid response for {filename}. "
             "Status code: {response.status_code}"

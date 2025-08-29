@@ -19,14 +19,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from downloader import handle_download_process, initialize_managers, parse_arguments
-from helpers.config import URLS_FILE
+from helpers.config import SESSION_LOG, URLS_FILE
 from helpers.file_utils import read_file, write_file
 from helpers.general_utils import clear_terminal
 
 if TYPE_CHECKING:
     from argparse import Namespace
 
-FILE_PATH = Path.cwd() / URLS_FILE
+URLS_FILE_PATH = Path.cwd() / URLS_FILE
+SESSION_FILE_PATH = Path.cwd() / SESSION_LOG
 
 
 def process_urls(urls: list[str], args: Namespace | None = None) -> None:
@@ -46,11 +47,19 @@ def process_urls(urls: list[str], args: Namespace | None = None) -> None:
 
 def main() -> None:
     """Run the script."""
+    # Clear the terminal and session log file
     clear_terminal()
+    write_file(SESSION_FILE_PATH)
+
+    # Parse arguments
     args = parse_arguments()
-    urls = read_file(FILE_PATH)
+
+    # Read and process URLs
+    urls = read_file(URLS_FILE_PATH)
     process_urls(urls, args)
-    write_file(FILE_PATH)
+
+    # Clear URLs file
+    write_file(URLS_FILE_PATH)
 
 
 if __name__ == "__main__":

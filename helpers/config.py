@@ -16,6 +16,23 @@ SESSION_LOG = "session_log.txt"                 # The file used to log session e
 MAX_WORKERS = 3                                 # The maximum number of threads for
                                                 # concurrent downloads.
 
+# Default and password usage commands
+DEFAULT_USAGE = "python3 downloader.py <album_url>"
+PASSWORD_USAGE = "python3 downloader.py <album_url> <password>"  # noqa: S105
+
+# Base headers common for all requests
+BASE_HEADERS = {
+    "Accept-Encoding": "gzip, deflate, br",
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-site",
+    "Pragma": "no-cache",
+    "Cache-Control": "no-cache",
+}
+
 # Constants for file sizes, expressed in bytes.
 KB = 1024
 MB = 1024 * KB
