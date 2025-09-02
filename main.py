@@ -12,6 +12,7 @@ Usage:
         2. Process each URL for downloading anime content.
         3. Clear the contents of 'URLs.txt' after all URLs have been processed.
 """
+
 from __future__ import annotations
 
 import sys
@@ -54,8 +55,8 @@ def main() -> None:
     # Parse arguments
     args = parse_arguments()
 
-    # Read and process URLs
-    urls = read_file(URLS_FILE_PATH)
+    # Read and process URLs, ignoring empty lines
+    urls = [url.strip() for url in read_file(URLS_FILE_PATH) if url.strip()]
     process_urls(urls, args)
 
     # Clear URLs file
