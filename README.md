@@ -3,13 +3,14 @@
 > This script is a utility for downloading files from GoFile, supporting both
 public and password-protected albums.
 
-![Demo](https://github.com/Lysagxra/GoFileDownloader/blob/45eb080468efce402d4e74e5d5b71dcf5b1eac79/misc/Demo.gif)
+![Demo](https://github.com/Lysagxra/GoFileDownloader/blob/90b902ff734115dd1d955f80ac855700bcde7cc2/assets/demo.gif)
 
 ## Features
 
 - Downloads multiple files from an album concurrently.
 - Supports [batch downloading](https://github.com/Lysagxra/GoFileDownloader?tab=readme-ov-file#batch-download) via a list of URLs.
 - Supports [downloading password-protected albums](https://github.com/Lysagxra/GoFileDownloader?tab=readme-ov-file#password-protected-album-download) by providing a password.
+- Supports [custom download location](https://github.com/Lysagxra/GoFileDownloader?tab=readme-ov-file#file-download-location).
 - Progress indication during downloads.
 - Automatically creates a directory structure for organized storage.
 - Logs URLs that encounter errors for troubleshooting.
@@ -20,7 +21,9 @@ public and password-protected albums.
 - `requests` - for HTTP requests
 - `rich` - for progress display in the terminal.
 
-## Directory Structure
+<details>
+
+<summary>Show directory structure</summary>
 
 ```
 project-root/
@@ -39,6 +42,8 @@ project-root/
 ├── URLs.txt                 # Text file listing album URLs to be downloaded
 └── session_log.txt          # Log file for recording session details
 ```
+
+</details>
 
 ## Installation
 
@@ -117,23 +122,21 @@ https://gofile.io/d/jLWdTZ
 python3 main.py
 ```
 
-3. The downloaded files will be saved in the `Downloads` directory.
+## File Download Location
 
-### Custom Download Path
+If the `--custom-path <custom_path>` argument is used, the downloaded files will be saved in `<custom_path>/Downloads`. Otherwise, the files will be saved in a `Downloads` folder created within the script's directory
 
-To download content to a custom path, use the `--download_path` argument, followed by the absolute path of the desired download folder.
-
-```bash
-python3 main.py <gofile_url> --download_path /path/to/custom_folder
-```
-
-Alternatively, you can use the `downloader.py` script in the same way:
+### Usage
 
 ```bash
-python3 downloader.py <gofile_url> --download_path /path/to/custom_folder
+python3 main.py --custom-path <custom_path>
 ```
 
-The default behavior is to save files in a `Downloads` folder, created within the current working directory, if no path is specified.
+### Example
+
+```bash
+python3 main.py --custom-path /path/to/external/drive
+```
 
 ## Logging
 
