@@ -19,10 +19,11 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from downloader import handle_download_process, initialize_managers, parse_arguments
-from helpers.config import SESSION_LOG, URLS_FILE
-from helpers.file_utils import read_file, write_file
-from helpers.general_utils import clear_terminal
+from downloader import handle_download_process
+from src.config import SESSION_LOG, URLS_FILE, parse_arguments
+from src.file_utils import read_file, write_file
+from src.general_utils import clear_terminal
+from src.managers.live_manager import initialize_managers
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -53,7 +54,7 @@ def main() -> None:
     write_file(SESSION_FILE_PATH)
 
     # Parse arguments
-    args = parse_arguments()
+    args = parse_arguments(common_only=True)
 
     # Read and process URLs, ignoring empty lines
     urls = [url.strip() for url in read_file(URLS_FILE_PATH) if url.strip()]

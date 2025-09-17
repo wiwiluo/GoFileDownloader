@@ -7,35 +7,37 @@ Example usage:
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import logging
 import os
 import sys
-from argparse import Namespace
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import requests
 
-from helpers.config import (
+from src.config import (
     BASE_HEADERS,
     DEFAULT_USAGE,
     DOWNLOAD_FOLDER,
     MAX_WORKERS,
     PASSWORD_USAGE,
+    parse_arguments,
 )
-from helpers.download_utils import save_file_with_progress
-from helpers.general_utils import clear_terminal, create_download_directory
-from helpers.gofile_utils import (
+from src.download_utils import save_file_with_progress
+from src.file_utils import create_download_directory
+from src.general_utils import clear_terminal
+from src.gofile_utils import (
     check_response_status,
     generate_content_url,
     get_account_token,
     get_content_id,
 )
-from helpers.managers.live_manager import LiveManager
-from helpers.managers.log_manager import LoggerTable
-from helpers.managers.progress_manager import ProgressManager
+from src.managers.live_manager import LiveManager, initialize_managers
+
+if TYPE_CHECKING:
+    from argparse import Namespace
 
 DEFAULT_DOWNLOAD_PATH = Path.cwd() / DOWNLOAD_FOLDER
 
@@ -57,13 +59,13 @@ class Downloader:
         """Initialize the downloader with the given parameters."""
         self.url = url
         self.live_manager = live_manager
-        self.password = args.password
+        self.password = args.password if "password" in args else None
         self.max_workers = MAX_WORKERS
         self.token = get_account_token()
 
         self.download_path = (
-            Path(args.download_path)
-            if args.download_path is not None
+            Path(args.custom_path)
+            if args.custom_path is not None
             else DEFAULT_DOWNLOAD_PATH
         )
         self.download_path.mkdir(parents=True, exist_ok=True)
@@ -235,34 +237,6 @@ def handle_download_process(
 
     downloader = Downloader(url=url, live_manager=live_manager, args=args)
     downloader.initialize_download()
-
-
-def initialize_managers() -> LiveManager:
-    """Initialize and returns the managers for progress tracking and logging."""
-    progress_manager = ProgressManager(task_name="Album", item_description="File")
-    logger_table = LoggerTable()
-    return LiveManager(progress_manager, logger_table)
-
-
-def parse_arguments() -> Namespace:
-    """Set up and returns an argument parser."""
-    parser = argparse.ArgumentParser(
-        description="Download content from a specified URL.",
-    )
-    parser.add_argument("url", nargs="?", type=str, help="The URL to download from.")
-    parser.add_argument(
-        "password",
-        nargs="?",
-        type=str,
-        help="The password for the download.",
-    )
-    parser.add_argument(
-        "--download-path",
-        "-d",
-        type=str,
-        help="The directory where the downloaded content will be saved.",
-    )
-    return parser.parse_args()
 
 
 def main() -> None:
