@@ -127,4 +127,4 @@ def extract_links():
         return jsonify({"error": f"处理请求时出错: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5010)
